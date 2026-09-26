@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f172a">
+<title>AWS AI Practitioner (AIF-C01)</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --text:#e2e8f0; --dim:#94a3b8; --acc:#f59e0b; --ok:#22c55e; --bad:#ef4444; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:17px/1.6 -apple-system, system-ui, Segoe UI, Roboto, sans-serif; }
+  body { overflow-wrap:anywhere; }
+  main { max-width:720px; margin:0 auto; padding:16px 16px 80px; }
+  a { color:var(--acc); text-decoration:none; }
+  h1 { font-size:1.6rem; line-height:1.25; margin:.4em 0; }
+  h2 { font-size:1.15rem; margin:1.6em 0 .5em; color:var(--acc); }
+  h3 { font-size:1rem; margin:0 0 .4em; }
+  .dim { color:var(--dim); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:12px 0; }
+  .ep { display:flex; gap:12px; align-items:center; color:var(--text); }
+  .ep .n { flex:none; width:34px; height:34px; border-radius:50%; background:var(--line); display:grid; place-items:center; font-weight:700; font-size:.9rem; }
+  .ep.done .n { background:var(--ok); color:#000; }
+  .tag { display:inline-block; font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--acc); margin-bottom:4px; }
+  button, .btn { font:inherit; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; width:100%; text-align:left; margin:6px 0; cursor:pointer; display:block; }
+  .btn.primary { background:var(--acc); color:#000; font-weight:700; text-align:center; border:0; }
+  button.ok { border-color:var(--ok); background:#14532d; }
+  button.bad { border-color:var(--bad); background:#450a0a; }
+  button:disabled { cursor:default; color:var(--text); }
+  .why { font-size:.9rem; color:var(--dim); margin-top:4px; }
+  .flip .back { display:none; color:var(--acc); }
+  .flip.open .front { display:none; } .flip.open .back { display:block; }
+  details summary { cursor:pointer; font-weight:600; }
+  ol { padding-left:1.2em; } li { margin:.5em 0; }
+  select { font:inherit; width:100%; padding:10px; background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:10px; }
+  .hot { border-color:var(--acc); }
+</style>
+</head>
+<body>
+<main id="app"><p class="dim">Loading…</p></main>
+<script>
+// All data is our own static JSON, and every value goes through esc() before hitting the DOM.
+const render = (h) => { document.getElementById('app').innerHTML = h; scrollTo(0, 0); };
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const done = new Set(JSON.parse(localStorage.getItem('aif-done') || '[]'));
+const saveDone = () => localStorage.setItem('aif-done', JSON.stringify([...done]));
+let C, Q;
+
+const block = {
+  coldOpen: (b) => { const v = b.variants.classic || Object.values(b.variants)[0]; return block[v.kind](v); },
+  prose: (b) => (b.paras || [b.text]).map((p) => `<p>${esc(p)}</p>`).join(''),
+  panels: (b) => b.panels.map((p) => `<div class="card ${p.hot ? 'hot' : ''}"><div class="dim">${esc(p.cap)}</div><h3>${esc(p.line)}</h3><div>${esc(p.sub)}</div></div>`).join(''),
+  lab: (b) => `<div class="card"><p>${esc(b.setup)}</p><p><b>${esc(b.task)}</b></p></div>`,
+  bet: (b) => `<div class="card"><span class="tag">${esc(b.label)}</span><h3>${esc(b.question)}</h3>
+    ${b.options.map((o, i) => `<button data-bet="${esc(b.id)}" data-i="${i}">${esc(o.key)}. ${esc(o.text)}<div class="why" hidden>${esc(o.why)}</div></button>`).join('')}
+    <div id="v-${esc(b.id)}" hidden><h3>${esc(b.verdict.headline)}</h3><p>${esc(b.verdict.body)}</p>${b.verdict.aside ? `<p class="dim">${esc(b.verdict.aside)}</p>` : ''}</div></div>`,
+  steps: (b) => `<h2>${esc(b.title)}</h2>${b.intro ? `<p>${esc(b.intro)}</p>` : ''}<ol>${b.steps.map((s) => `<li><b>${esc(s.t)}</b><br>${esc(s.d)}</li>`).join('')}</ol>`,
+  skip: (b) => `<div class="card"><span class="tag">Skip this</span><h3>${esc(b.title)}</h3><p>${esc(b.text)}</p></div>`,
+  examReality: (b) => `<h2>On the exam</h2><p>${esc(b.intro)}</p>${b.rows.map((r) => `<div class="card"><b>${esc(r.tag)}</b><div>${esc(r.text)}</div></div>`).join('')}`,
+  flashcards: (b) => `<h2>Flashcards</h2><p class="dim">Tap a card to flip it.</p>${b.cards.map((c) => `<div class="card flip" onclick="this.classList.toggle('open')"><div class="front"><b>${esc(c.front)}</b></div><div class="back">${esc(c.back)}</div></div>`).join('')}`,
+  recap: (b) => `<h2>Recap from last time</h2>${b.items.map((i) => `<details class="card"><summary>${esc(i.q)}</summary><p>${esc(i.a)}</p></details>`).join('')}`,
+  cliff: (b) => `<h2>${esc(b.question)}</h2>${b.body.map((p) => `<p>${esc(p)}</p>`).join('')}`,
+};
+
+function home() {
+  render(`<h1>${esc(C.title)}</h1><p class="dim">${esc(C.subtitle)} · ${done.size}/${C.episodes.length} done</p>
+    <a class="btn primary" href="#/practice">Practice questions (${Q.questions.length})</a>
+    ${C.domains.map((d) => `<h2>${d.n}. ${esc(d.name)}</h2>` + C.episodes.filter((e) => e.domainId === d.id).map((e) =>
+      `<a class="card ep ${done.has(e.n) ? 'done' : ''}" href="#/e/${e.n}"><span class="n">${done.has(e.n) ? '✓' : e.n}</span><span><b>${esc(e.title)}</b><br><span class="dim">${e.minutes} min · ${esc(e.deck)}</span></span></a>`).join('')).join('')}`);
+}
+
+function episode(n) {
+  const e = C.episodes.find((x) => x.n === n);
+  if (!e) return home();
+  const next = C.episodes.find((x) => x.n === n + 1);
+  render(`<a href="#/">← All episodes</a><div class="tag" style="display:block;margin-top:12px">Episode ${e.n} · ${e.minutes} min</div>
+    <h1>${esc(e.title)}</h1><p class="dim">${esc(e.deck)}</p>
+    ${e.blocks.map((b) => (block[b.kind] || (() => ''))(b)).join('')}
+    <button class="btn primary" id="finish">${next ? 'Done · next episode →' : 'Done · back to list'}</button>`);
+  document.querySelectorAll('[data-bet]').forEach((btn) => btn.onclick = () => {
+    const b = e.blocks.find((x) => x.id === btn.dataset.bet);
+    document.querySelectorAll(`[data-bet="${b.id}"]`).forEach((o) => {
+      o.disabled = true; o.querySelector('.why').hidden = false;
+      if (b.options[o.dataset.i].correct) o.classList.add('ok'); else if (o === btn) o.classList.add('bad');
+    });
+    document.getElementById('v-' + b.id).hidden = false;
+  });
+  document.getElementById('finish').onclick = () => { done.add(n); saveDone(); location.hash = next ? '#/e/' + next.n : '#/'; };
+}
+
+let qDomain = '';
+function practice() {
+  const pool = Q.questions.filter((q) => !qDomain || q.domain === qDomain);
+  const q = pool[Math.floor(Math.random() * pool.length)];
+  const need = q.options.filter((o) => o.correct).length;
+  const picked = new Set();
+  render(`<a href="#/">← All episodes</a><h1>Practice</h1>
+    <select id="dom"><option value="">All domains</option>${Q.exam.domains.map((d) => `<option value="${d.id}" ${d.id === qDomain ? 'selected' : ''}>${d.n}. ${esc(d.name)} (${d.weight}%)</option>`).join('')}</select>
+    <div class="card"><div class="dim">Task ${esc(q.task)}${need > 1 ? ` · Choose ${need}` : ''}</div><h3>${esc(q.stem)}</h3>
+    ${q.options.map((o, i) => `<button data-i="${i}">${esc(o.key)}. ${esc(o.text)}<div class="why" hidden>${esc(o.why)}</div></button>`).join('')}
+    <div id="after" hidden>${q.trap ? `<p><b>Trap:</b> ${esc(q.trap)}</p>` : ''}<button class="btn primary" id="nextq">Next question →</button></div></div>`);
+  document.getElementById('dom').onchange = (ev) => { qDomain = ev.target.value; practice(); };
+  const opts = [...document.querySelectorAll('button[data-i]')];
+  opts.forEach((btn) => btn.onclick = () => {
+    if (picked.has(+btn.dataset.i)) return;
+    picked.add(+btn.dataset.i); btn.style.borderColor = 'var(--acc)';
+    if (picked.size < need) return;
+    opts.forEach((o) => {
+      o.disabled = true; o.querySelector('.why').hidden = false;
+      if (q.options[o.dataset.i].correct) o.classList.add('ok'); else if (picked.has(+o.dataset.i)) o.classList.add('bad');
+    });
+    document.getElementById('after').hidden = false;
+    document.getElementById('nextq').onclick = practice;
+  });
+}
+
+function route() {
+  const h = location.hash;
+  if (h.startsWith('#/e/')) episode(+h.slice(4));
+  else if (h === '#/practice') practice();
+  else home();
+}
+
+Promise.all(['course.json', 'questions.json'].map((f) => fetch(f).then((r) => r.json()))).then(([c, q]) => {
+  C = c; Q = q; addEventListener('hashchange', route); route();
+});
+</script>
+</body>
+</html>
