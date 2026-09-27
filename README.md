@@ -4,6 +4,8 @@
 
 ## 👉 [**Start studying now →**](https://srimantechnologiesllc-hub.github.io/AWS-AI-Practitioner/)
 
+> **Disclaimer:** This is an independent, unofficial study guide. It is not an official AWS course or certification program, and it is not affiliated with, endorsed by, or sponsored by Amazon Web Services. It was created using publicly available AWS certification resources and documentation.
+
 ---
 
 Tired of 20-hour video courses and $50 practice exams? This is the **AIF-C01 prep we wanted and couldn't find**: short, scenario-driven episodes that teach you how the exam *thinks*, plus a big bank of practice questions with explanations for **every** answer, the wrong ones included.
