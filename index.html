@@ -16,6 +16,7 @@
   h2 { font-size:1.15rem; margin:1.6em 0 .5em; color:var(--acc); }
   h3 { font-size:1rem; margin:0 0 .4em; }
   .dim { color:var(--dim); font-size:.9rem; }
+  .disclaimer { margin:.75em 0 1em; padding:.65em .8em; border:1px solid var(--line); border-radius:10px; background:rgba(15,23,42,.45); color:var(--dim); font-size:.82rem; line-height:1.45; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:12px 0; }
   .ep { display:flex; gap:12px; align-items:center; color:var(--text); }
   .ep .n { flex:none; width:34px; height:34px; border-radius:50%; background:var(--line); display:grid; place-items:center; font-weight:700; font-size:.9rem; }
@@ -63,6 +64,7 @@ const block = {
 
 function home() {
   render(`<h1>${esc(C.title)}</h1><p class="dim">${esc(C.subtitle)} · ${done.size}/${C.episodes.length} done</p>
+    <div class="disclaimer"><b>Disclaimer:</b> This is an independent, unofficial study guide. It is not an official AWS course or certification program, and it is not affiliated with, endorsed by, or sponsored by Amazon Web Services. It was created using publicly available AWS certification resources and documentation.</div>
     <a class="btn primary" href="#/practice">Practice questions (${Q.questions.length})</a>
     ${C.domains.map((d) => `<h2>${d.n}. ${esc(d.name)}</h2>` + C.episodes.filter((e) => e.domainId === d.id).map((e) =>
       `<a class="card ep ${done.has(e.n) ? 'done' : ''}" href="#/e/${e.n}"><span class="n">${done.has(e.n) ? '✓' : e.n}</span><span><b>${esc(e.title)}</b><br><span class="dim">${e.minutes} min · ${esc(e.deck)}</span></span></a>`).join('')).join('')}`);
